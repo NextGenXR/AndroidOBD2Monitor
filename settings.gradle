@@ -1,0 +1,2 @@
+include ':app'
+rootProject.name = "Jenni OBD2 Monitor"

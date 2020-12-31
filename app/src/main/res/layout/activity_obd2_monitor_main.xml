@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="5,5,5,5,5,"
+    android:background="@color/white"
+    tools:context=".OBD2MonitorMainActivity">
+
+
+    <Button
+        android:id="@+id/send_cmd_btn"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="330dp"
+        android:enabled="false"
+        android:text="@string/send_command" />
+
+    <Button
+        android:id="@+id/select_device_btn"
+        android:layout_width="175dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="12.5dp"
+        android:layout_marginBottom="15dp"
+        android:text="@string/select_device" />
+
+    <Button
+        android:id="@+id/disconnect_device_btn"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="12.5dp"
+        android:layout_marginBottom="15dp"
+        android:enabled="false"
+        android:text="@string/disconnect_device" />
+
+    <EditText
+        android:id="@+id/input_cmd_edit"
+        android:layout_width="275dp"
+        android:layout_height="45dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="11dp"
+        android:layout_marginTop="280dp"
+        android:autofillHints=""
+        android:hint="@string/input_command"
+        android:inputType="text"
+        android:selectAllOnFocus="true"
+        android:singleLine="true" />
+
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_width="95dp"
+        android:layout_height="45dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="280dp"
+        android:layout_marginEnd="12.5dp"
+        android:spinnerMode="dialog" />
+
+    <TextView
+        android:id="@+id/supported_pids_text"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="218dp"
+        android:background="@color/wheat"
+        android:gravity="center|start"
+        android:hint="@string/supported_pids"
+        android:scrollbars="horizontal"
+        android:textColor="@color/red"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="Supported PIDs" />
+
+    <TextView
+        android:id="@+id/connected_status_text"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_centerHorizontal="true"
+        android:background="@color/limegreen"
+        android:gravity="center"
+        android:hint="@string/connected_status"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/response_msg_text"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:layout_below="@+id/connected_status_text"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@color/wheat"
+        android:hint="@string/response_message"
+        android:scrollbars="vertical" />
+
+</RelativeLayout>
+

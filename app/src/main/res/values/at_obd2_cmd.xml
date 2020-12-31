@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="ATandOBD2Commands">
+        <item>CMD AT and OBD Commands,[h] representative[0-F] value</item>
+        <item>>->Terminator</item>
+        <item>ATZ->Reset All</item>
+        <item>ATWS->Hot Start (QuickSoftwareRestart)</item>
+        <item>ATE0->Echo Shut Down [0], Turn On [1]</item>
+        <item>ATL0->Wrap Off [0], Turn On [1]</item>
+        <item>AT DP->Describe the Current Agreement</item>
+        <item>AT DPN->Use number to describe current agreement</item>
+        <item>AT SP h-> use [h:0-C] Set Up and Save</item>
+        <item>AT SP Ah-> use [h:0-C] Automatically set protocol and save</item>
+        <item>AT TP h-> Try agreement [h:0-C]</item>
+        <item>AT TP Ah-> Try agreement [h:0-C] Automatic Retrieval </item>
+        <item>0100->Examine PIDs Supported [01-20]</item>
+        <item>0105->Engine coolant temperature</item>
+        <item>010A->Fuel pressure</item>
+        <item>010B->Intake manifold absolute pressure</item>
+        <item>010C->Engine speed</item>
+        <item>0101->Error Code</item>
+        <item>03->Show Stored Diagnostic Codes</item>
+        <item>04->Clear Diagnostic Error Codes</item>
+        <item>== RES_TEST OBD Response ==</item>
+        <item>SEARCHING...->OBD Response</item>
+        <item>41 00 BE 1F A8 13 >->OBD Response 0100</item>
+        <item>41 05 7B  >->OBD Response: Engine Coolant Temperature</item>
+        <item>41 0B 1A F8  >->OBD Response: Manifold Absolute Pressure</item>
+        <item>41 0C 1A  >->OBD Response: Engine Speed</item>
+        <item>41 01 81 07 65 04  >->OBD Response: Number of Fault Codes</item>
+        <item>43 01 33 00 00 00 00  >->OBD Response: Request Fault Codes</item>
+        <item>43 00 43 00 00 00 00  >->OBD Response: Request Trouble Code</item>
+        <item>NO DATA  >->OBD Response:No data</item>
+        <item>OK  >->OBD Response: Ok</item>
+        <item>ELM327 1.5  >->OBD Response:No data</item>
+        <item>UNABLE TO CONNECT  >->OBD Response:ERROR</item>
+        <item>BUS BUSY  >->OBD Response:ERROR</item>
+        <item>DATA ERROR  >->OBD Response:ERROR</item>
+        <item>BUS ERROR  >->OBD Response:ERROR</item>
+        <item>CAN ERROR  >->OBD Response:ERROR</item>
+        <item>STOPPED  >->OBD Response:ERROR</item>
+    </string-array>
+
+    <string-array name="protocols">
+        <item>0 - Automatic</item>
+        <item>1 - SAE J1850 PWM (41.6 Kbaud)</item>
+        <item>2 - SAE J1850 VPW (10.4 Kbaud)</item>
+        <item>3 – ISO 9141-2 (5 baud init, 10.4 Kbaud)</item>
+        <item>4 - ISO 14230-4 KWP (5 baud init, 10.4 Kbaud)</item>
+        <item>5 - ISO 14230-4 KWP (fast init, 10.4 Kbaud)</item>
+        <item>6 - ISO 15765-4 CAN (11 bit ID, 500 Kbaud)</item>
+        <item>7 - ISO 15765-4 CAN (29 bit ID, 500 Kbaud)</item>
+        <item>8 - ISO 15765-4 CAN (11 bit ID, 250 Kbaud)</item>
+        <item>9 - ISO 15765-4 CAN (29 bit ID, 250 Kbaud)</item>
+        <item>A - SAE J1939 CAN (29 bit ID, 250* Kbaud)</item>
+        <item>B - USER1 CAN (11* bit ID, 125* Kbaud)</item>
+        <item>C - USER2 CAN (11* bit ID, 50* Kbaud)</item>
+    </string-array>
+
+    <string-array name="OBD2_Commands">
+        <item>0100</item>
+        <item>PIDs Supported</item>
+        <item>-</item>
+        <item>4bytes</item>
+        <item>00-20</item>
+
+        <item>0105</item>
+        <item>Engine Coolant Temperature</item>
+        <item>°C</item>
+        <item>1byte</item>
+        <item>A-40</item>
+
+        <item>010A</item>
+        <item>Fuel Pressure</item>
+        <item>kPa</item>
+        <item>1byte</item>
+        <item>A*3</item>
+
+        <item>010B</item>
+        <item>Intake Manifold Absolute Pressure</item>
+        <item>kPa</item>
+        <item>1byte</item>
+        <item>A</item>
+
+        <item>010C</item>
+        <item>Engine Speed</item>
+        <item>RPM</item>
+        <item>2bytes</item>
+        <item>((A*256)+B)/4</item>
+
+        <item>0101</item>
+        <item>Number of Fault Codes</item>
+        <item>-</item>
+        <item>4byte</item>
+        <item>-</item>
+
+        <item>03</item>
+        <item>Error Code</item>
+        <item>-</item>
+        <item>n*6bytes</item>
+        <item>-</item>
+
+        <item>04</item>
+        <item>Clear Fault Code</item>
+        <item>-</item>
+        <item>0byte</item>
+        <item>-</item>
+    </string-array>
+
+</resources>
