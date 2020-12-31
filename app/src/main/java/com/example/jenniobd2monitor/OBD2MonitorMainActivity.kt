@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper.*
 import android.os.Message
 import android.text.method.ScrollingMovementMethod
 import android.view.Menu
@@ -14,6 +15,8 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.nextgenxr.jenniobd2monitor.R.id.spinner
+
+
 
 class OBD2MonitorMainActivity : AppCompatActivity() {
 
@@ -46,30 +49,52 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
     private var mItemAutoResNormal: MenuItem? = null
     private var mItemAutoResError: MenuItem? = null
 
-    private val mMsgHandler: Handler = object : Handler() {
+    internal class LooperThread : Thread() {
+        var mHandler: Handler? = null
+
+        override fun run() {
+            prepare()
+            mHandler = object : Handler() {
+                override fun handleMessage(msg: Message) {
+                    // process incoming messages here
+                }
+            }
+            loop()
+        }
+    }
+
+
+    private val mMsgHandler: Handler = object : Handler(myLooper()!!)
+    {
         @Override
-        override fun handleMessage(msg: Message) {
-            when (msg.what) {
-                MESSAGE_STATE_CHANGE -> when (msg.arg1) {
+        override fun handleMessage(msg: Message)
+        {
+            when (msg.what)
+            {
+                MESSAGE_STATE_CHANGE -> when (msg.arg1)
+                {
                     OBD2MonitorService.STATE_CONNECTING -> setConnectedStatusTitle(R.string.device_connecting)
-                    OBD2MonitorService.STATE_CONNECTED -> {
-                        mSendOBD2CMDBtn.setEnabled(true)
-                        mDisconnectDeviceBtn.setEnabled(true)
+                    OBD2MonitorService.STATE_CONNECTED ->
+                    {
+                        mSendOBD2CMDBtn?.isEnabled = true
+                        mDisconnectDeviceBtn?.isEnabled = true
                         setConnectedStatusTitle(mConnectedDeviceName)
                     }
-                    OBD2MonitorService.STATE_LISTEN, OBD2MonitorService.STATE_NONE -> {
-                        mSendOBD2CMDBtn.setEnabled(false)
-                        mDisconnectDeviceBtn.setEnabled(false)
-                        mConnectedStatusTxt.setText("")
+                    OBD2MonitorService.STATE_LISTEN, OBD2MonitorService.STATE_NONE ->
+                    {
+                        mSendOBD2CMDBtn?.isEnabled = false
+                        mDisconnectDeviceBtn?.isEnabled = false
+                        mConnectedStatusTxt?.text = ""
                     }
-                    else -> {
-                    }
+                    else -> {}
                 }
-                MESSAGE_READ -> {
+                MESSAGE_READ ->
+                {
                     val readBuf = msg.obj as ByteArray
                     // construct a string from the valid bytes in the buffer
                     val readMessage = String(readBuf, 0, msg.arg1)
-                    if (autoRes == AUTO_RES.AUTO_RES_NONE) {
+                    if (autoRes == AUTO_RES.AUTO_RES_NONE)
+                    {
                         setPidsSupported(readMessage)
                         mCmdAndRes!!.append(" > Receive: $readMessage")
                         mCmdAndRes!!.append('\n')
@@ -79,14 +104,14 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
                         autoResponse(readMessage)
                     }
                 }
-                MESSAGE_WRITE -> {
-                }
-                MESSAGE_TOAST -> Toast.makeText(applicationContext, msg.data.getString(TOAST),
-                        Toast.LENGTH_SHORT).show()
+                MESSAGE_WRITE -> { }
+                MESSAGE_TOAST -> Toast.makeText(
+                    applicationContext, msg.data.getString(TOAST),
+                    Toast.LENGTH_SHORT
+                ).show()
                 MESSAGE_DEVICE_NAME ->                     // save the connected device's name
                     mConnectedDeviceName = msg.data.getString(DEVICE_NAME)
-                else -> {
-                }
+                else -> {}
             }
         }
     }
@@ -98,8 +123,10 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (mBluetoothAdapter == null)
         {
-            Toast.makeText(this, R.string.bt_not_available,
-                    Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this, R.string.bt_not_available,
+                Toast.LENGTH_LONG
+            ).show()
             finish()
         }
 
@@ -116,35 +143,47 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
         mSelectBtDevicesBtn = findViewById<Button>(R.id.select_device_btn)
 
         mSelectBtDevicesBtn.setOnClickListener(
-                View.OnClickListener { view -> buttonOnClick(view) })
+            View.OnClickListener { view -> buttonOnClick(view) })
 
         mCommandsSpinner = findViewById<Spinner>(spinner)
         val mItems: Array<String> = resources.getStringArray(R.array.ATandOBD2Commands)
 
         // Set up the adapter and bind the data source
-        val mAdapter: ArrayAdapter<String> = ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mItems)
+        val mAdapter: ArrayAdapter<String> = ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_spinner_item,
+            mItems
+        )
 
         // Bind Adapter to Control
         this.mCommandsSpinner.setAdapter(mAdapter)
-        this.mCommandsSpinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener()
+        this.mCommandsSpinner.setOnItemSelectedListener(object :
+            AdapterView.OnItemSelectedListener()
         {
-                override fun onItemSelected(adapterView: AdapterView<*>, view: View?, i: Int, l: Long)
+            override fun onItemSelected(
+                adapterView: AdapterView<*>,
+                view: View?,
+                i: Int,
+                l: Long)
+            {
+                if (i > 0)
                 {
-                    if (i > 0)
-                    {
-                        val itemStr: String = adapterView.getItemAtPosition(i).toString()
-                        val tmpStr: List<String> = itemStr.split("->")
-                        val cmd = tmpStr[0]
-                        mInputOBD2CMDEditTxt.setText(cmd)
-                    } else {
-                        mInputOBD2CMDEditTxt.setText("")
-                    }
+                    val itemStr: String = adapterView.getItemAtPosition(i).toString()
+                    val tmpStr: List<String> = itemStr.split("->")
+                    val cmd = tmpStr[0]
+                    mInputOBD2CMDEditTxt.setText(cmd)
+                } else {
+                    mInputOBD2CMDEditTxt.setText("")
                 }
+            }
 
-                override fun onNothingSelected(adapterView: AdapterView<*>?)
-                {
-                    Toast.makeText(this@OBD2MonitorMainActivity, "Nothing to selected", Toast.LENGTH_LONG).show()
-                }
+            override fun onNothingSelected(adapterView: AdapterView<*>?) {
+                Toast.makeText(
+                    this@OBD2MonitorMainActivity,
+                    "Nothing to selected",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         })
         mCmdAndRes = StringBuilder()
         autoRes = AUTO_RES.AUTO_RES_NONE
@@ -163,22 +202,13 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
 
     private fun setupOBDMonitor()
     {
-        mSendOBD2CMDBtn = findViewById(R.id.send_cmd_btn) as Button?
-        mSendOBD2CMDBtn.setOnClickListener(object : View.OnClickListener()
-        {
-            override fun onClick(view: View)
-            {
-                buttonOnClick(view)
-            }
-        })
-        mDisconnectDeviceBtn = findViewById(R.id.disconnect_device_btn) as Button?
+        mSendOBD2CMDBtn = findViewById<Button>(R.id.send_cmd_btn)
+        mSendOBD2CMDBtn?.setOnClickListener { view -> buttonOnClick(view) }
+
+        mDisconnectDeviceBtn = findViewById<Button>(R.id.disconnect_device_btn)
+
         mDisconnectDeviceBtn.setOnClickListener(
-                object : View.OnClickListener() {
-                    @Override
-                    override fun onClick(view: View) {
-                        buttonOnClick(view)
-                    }
-                },
+            View.OnClickListener { view -> buttonOnClick(view) },
         )
         mOBD2MonitorService = OBD2MonitorService(this, mMsgHandler)
     }
@@ -186,7 +216,7 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
     ////////////////////////////////////////////////////////////
     private fun setConnectedStatusTitle(title: CharSequence?)
     {
-        mConnectedStatusTxt?.setText(title)
+        mConnectedStatusTxt?.text = title
     }
 
     ////////////////////////////////////////////////////////////
@@ -217,11 +247,15 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
             sendOBD2CMD("SEARCHING..." + "41 00 BE 1F A8 13 >")
         }
         if (responseMessage == "0105") {
-            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD("41 05 7B  >")
+            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD(
+                "41 05 7B  >"
+            )
             if (autoRes == AUTO_RES.AUTO_RES_ERROR) sendOBD2CMD("CAN ERROR >")
         }
         if (responseMessage == "010B") {
-            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD("41 0B 1A >")
+            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD(
+                "41 0B 1A >"
+            )
             if (autoRes == AUTO_RES.AUTO_RES_ERROR) sendOBD2CMD("CAN ERROR >")
         }
         if (responseMessage == "010C") {
@@ -230,11 +264,15 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
             if (autoRes == AUTO_RES.AUTO_RES_ERROR) sendOBD2CMD("CAN ERROR >")
         }
         if (responseMessage == "0101") {
-            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD("41 01 82 07 65 04 >")
+            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD(
+                "41 01 82 07 65 04 >"
+            )
             if (autoRes == AUTO_RES.AUTO_RES_ERROR) sendOBD2CMD("CAN ERROR >")
         }
         if (responseMessage == "03") {
-            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD("43 00 43 01 33 00 00 >")
+            if (autoRes == AUTO_RES.AUTO_RES_OK || autoRes == AUTO_RES.AUTO_RES_NORMAL) sendOBD2CMD(
+                "43 00 43 01 33 00 00 >"
+            )
             if (autoRes == AUTO_RES.AUTO_RES_ERROR) sendOBD2CMD("CAN ERROR >")
         }
     }
@@ -309,15 +347,19 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
     {
         if (mOBD2MonitorService!!.state != OBD2MonitorService.STATE_CONNECTED)
         {
-            Toast.makeText(this, R.string.bt_not_available,
-                    Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this, R.string.bt_not_available,
+                Toast.LENGTH_LONG
+            ).show()
         }
 
         var strCMD: String = mInputOBD2CMDEditTxt?.text.toString()
         if (strCMD == "")
         {
-            Toast.makeText(this, R.string.please_input_cmd,
-                    Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this, R.string.please_input_cmd,
+                Toast.LENGTH_LONG
+            ).show()
             return
         }
 
@@ -340,8 +382,10 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
 
     private fun sendOBD2CMD(sendMsg: String) {
         if (mOBD2MonitorService!!.state != OBD2MonitorService.STATE_CONNECTED) {
-            Toast.makeText(this, R.string.bt_not_available,
-                    Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this, R.string.bt_not_available,
+                Toast.LENGTH_LONG
+            ).show()
         }
         var strCMD = sendMsg
         strCMD += '\r'
@@ -355,7 +399,10 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
 
 
     private fun selectDevice() {
-        val devicesIntent = Intent(this@OBD2MonitorMainActivity, OBD2MonitorDevicesActivity::class.java)
+        val devicesIntent = Intent(
+            this@OBD2MonitorMainActivity,
+            OBD2MonitorDevicesActivity::class.java
+        )
         startActivityForResult(devicesIntent, REQUEST_CONNECT_DEVICE_SECURE)
     }
 
@@ -414,14 +461,14 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
     }
 
     @Override
-    protected override fun onPause() {
+    protected fun onPause() {
         super.onPause()
     }
 
 
     @Override
     @Synchronized
-    protected override fun onResume() {
+    protected fun onResume() {
         super.onResume()
         if (mOBD2MonitorService != null) {
             // Only if the state is STATE_NONE, do we know that we haven't started already
@@ -436,12 +483,12 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
     }
 
     @Override
-    protected override fun onStop() {
+    protected fun onStop() {
         super.onStop()
     }
 
     @Override
-    protected override fun onDestroy() {
+    protected fun onDestroy() {
         super.onDestroy()
         if (mOBD2MonitorService != null) {
             mOBD2MonitorService!!.stop()
@@ -452,7 +499,7 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
     }
 
     @Override
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.activity_obd2_monitor_main, menu)
         mItemSetting = menu.findItem(R.id.menu_settings)
@@ -466,9 +513,10 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
 
 
     @Override
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_settings -> Toast.makeText(this, "Menu_Setting_Clicked", Toast.LENGTH_LONG).show()
+            R.id.menu_settings -> Toast.makeText(this, "Menu_Setting_Clicked", Toast.LENGTH_LONG)
+                .show()
             R.id.menu_quit -> finish()
             R.id.menu_help -> {
                 val helpIntent = Intent()
@@ -505,10 +553,11 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
         private const val REQUEST_ENABLE_BT = 3
         private var mCmdAndRes: StringBuilder? = null
         private val PIDS = arrayOf(
-                "01", "02", "03", "04", "05", "06", "07", "08",
-                "09", "0A", "0B", "0C", "0D", "0E", "0F", "10",
-                "11", "12", "13", "14", "15", "16", "17", "18",
-                "19", "1A", "1B", "1C", "1D", "1E", "1F", "20")
+            "01", "02", "03", "04", "05", "06", "07", "08",
+            "09", "0A", "0B", "0C", "0D", "0E", "0F", "10",
+            "11", "12", "13", "14", "15", "16", "17", "18",
+            "19", "1A", "1B", "1C", "1D", "1E", "1F", "20"
+        )
 
         // Create LogFile
         fun writeOBD2MonitorLog(content: String) {
@@ -523,7 +572,8 @@ class OBD2MonitorMainActivity : AppCompatActivity() {
                 }
                 if (logFile.canWrite()) {
                     val stime = SimpleDateFormat(
-                            "yyyy-MM-dd hh:mm:ss ")
+                        "yyyy-MM-dd hh:mm:ss "
+                    )
                     val Dfile = RandomAccessFile(logFile, "rw")
                     val contents: String = (stime.format("==" + Date()).toString() + "->" + content
                             + "\r\n")

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
@@ -14,11 +15,13 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
 
-class OBD2MonitorService (context: Context?, handler: Handler?){
+class OBD2MonitorService (context: Context?, handler: Handler?)
+{
 
     // Member fields
+    @android.support.annotation.RequiresApi(Build.VERSION_CODES.ECLAIR) // For Bluetooth
     private val mAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-    private val mHandler: Handler
+    private var mHandler: Handler? = null // This is set to handler in init fun
     private var mSecureAcceptThread: AcceptThread? = null
     private var mInsecureAcceptThread: AcceptThread? = null
     private var mConnectThread: ConnectThread? = null
@@ -38,12 +41,13 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
         get() = this.mState
         private set(state)
         {
-            if (D) Log.d(TAG, "setState() ${this.mState} -> $state")
+            if (debugLog) Log.d(TAG, "setState() ${this.mState} -> $state")
             this.mState = state
 
             // Give the new state to the Handler so the UI Activity can update
-            mHandler.obtainMessage(OBD2MonitorMainActivity.MESSAGE_STATE_CHANGE,
-                    state, -1).sendToTarget()
+            if (mHandler != null)
+                mHandler.obtainMessage(OBD2MonitorMainActivity.MESSAGE_STATE_CHANGE,
+                        state, -1).sendToTarget()
         }
 
     /**
@@ -53,7 +57,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
     @Synchronized
     fun start()
     {
-        if (D) Log.d(TAG, "start")
+        if (debugLog) Log.d(TAG, "start")
 
         // Cancel any thread attempting to make a connection
         if (mConnectThread != null)
@@ -92,7 +96,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
     @Synchronized
     fun connect(device: BluetoothDevice, secure: Boolean)
     {
-        if (D) Log.d(TAG, "connect to: $device")
+        if (debugLog) Log.d(TAG, "connect to: $device")
 
         // Cancel any thread attempting to make a connection
         if (mState == STATE_CONNECTING)
@@ -125,7 +129,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
      */
     @Synchronized
     fun connected(socket: BluetoothSocket?, device: BluetoothDevice, socketType: String) {
-        if (D) Log.d(TAG, "connected, Socket Type:$socketType")
+        if (debugLog) Log.d(TAG, "connected, Socket Type:$socketType")
 
         // Cancel the thread that completed the connection
         if (mConnectThread != null)
@@ -167,14 +171,13 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
         state = STATE_CONNECTED
     }
 
-
     /**
      * Stop all threads
      */
     @Synchronized
     fun stop()
     {
-        if (D) Log.d(TAG, "stop")
+        if (debugLog) Log.d(TAG, "stop")
         if (mConnectThread != null)
         {
             mConnectThread!!.cancel()
@@ -202,7 +205,6 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
         state = STATE_NONE
     }
 
-
     /**
      * Write to the ConnectedThread in an unsynchronized manner
      * @param out The bytes to write
@@ -214,6 +216,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
         var writeThread: ConnectedThread?
 
         // Synchronize a copy of the ConnectedThread
+        // Lock last for the lifetime of this fun
         synchronized(this)
         {
             if (mState != STATE_CONNECTED) return
@@ -230,7 +233,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
     private fun connectionFailed()
     {
         // Send a failure message back to the Activity
-        val msg: Message = mHandler.obtainMessage(OBD2MonitorMainActivity.MESSAGE_TOAST)
+        val msg: Message = mHandler!!.obtainMessage(OBD2MonitorMainActivity.MESSAGE_TOAST)
         val bundle = Bundle()
         bundle.putString(OBD2MonitorMainActivity.TOAST, "Unable to connect device")
         msg.data = bundle
@@ -257,7 +260,6 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
         start()
     }
 
-
     /**
      * This thread runs while listening for incoming connections. It behaves
      * like a server-side client. It runs until a connection is accepted
@@ -270,7 +272,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
 
         override fun run()
         {
-            if (D) Log.d(TAG, "Socket Type: " + mSocketType +
+            if (debugLog) Log.d(TAG, "Socket Type: " + mSocketType +
                     "BEGIN mAcceptThread" + this)
 
             name = "AcceptThread$mSocketType"
@@ -310,12 +312,12 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
                     }
                 }
             }
-            if (D) Log.i(TAG, "END mAcceptThread, socket Type: $mSocketType")
+            if (debugLog) Log.i(TAG, "END mAcceptThread, socket Type: $mSocketType")
         }
 
         fun cancel()
         {
-            if (D) Log.d(TAG, "Socket Type" + mSocketType + "cancel " + this)
+            if (debugLog) Log.d(TAG, "Socket Type" + mSocketType + "cancel " + this)
             try
             {
                 mmServerSocket.close()
@@ -487,7 +489,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
             {
                 bytes += mmInStream.read(readBuf)
                 val s = String(readBuf)
-                if (s != null && !s.equals(""))
+                if (s != "") // if (s != null && !s.equals(""))
                 {
                     buffer[bytes] = readBuf[0]
                     prompt = s.indexOf(">") >= 0
@@ -554,7 +556,7 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
     {
         // Debugging
         private const val TAG = "OBD2MonitorService"
-        private const val D = true
+        private const val debugLog = true
 
         // Name for the SDP record when creating server socket
         private const val NAME_SECURE = "OBD2MonitorSecure"
@@ -587,11 +589,4 @@ class OBD2MonitorService (context: Context?, handler: Handler?){
             mHandler = handler
         }
     }
-
-
-
-
-
-
-
-    }
+}
